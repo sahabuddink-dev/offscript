@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the root .env file}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -25,7 +25,7 @@ services:
       IS_PERSISTENT: "TRUE"
       PERSIST_DIRECTORY: /chroma/chroma
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${CHROMA_PORT:-8000}:8000"
     volumes:
       - chroma_data:/chroma/chroma
     healthcheck:
@@ -67,4 +67,3 @@ networks:
   offscript:
     name: offscript_network
     driver: bridge
-    internal: true

@@ -19,3 +19,7 @@ dist/
 
 # Logs
 *.log
+
+# Uploaded documents
+storage/documents/*
+!storage/documents/.gitkeep
