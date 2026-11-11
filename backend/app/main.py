@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.document import router as document_router
+from app.api.processing import router as processing_router
 from app.database.base import Base
 from app.database.connection import engine
 from app.models import Document
@@ -39,6 +40,11 @@ app.add_middleware(
 )
 
 app.include_router(document_router, prefix="/api/documents", tags=["documents"])
+app.include_router(
+    processing_router,
+    prefix="/api/documents",
+    tags=["document-processing"],
+)
 
 
 @app.get("/")

@@ -20,13 +20,13 @@ Business information is spread across documents in multiple formats, making it d
 
 - Provide a dependable document-management foundation.
 - Support multiple common business document formats.
-- Make future document processing and retrieval possible without coupling those concerns to the management interface.
+- Process stored documents and keep later retrieval independent of the management interface.
 - Keep the system modular, configurable, and testable.
 
 ## Explicit exclusions
 
-- No separate image-upload feature. Images, if later supported, belong within document processing rather than a separate upload module.
+- No separate image-upload feature. Embedded images are handled within document processing.
 - No document version comparison.
 - No separate RAG evaluation dashboard.
 
-Only Document Management is in the current implementation scope. The other approved modules remain future work.
+Document Management and Multimodal Document Processing are in the current implementation scope. Hybrid RAG, the AI Assistant, and Semantic Caching remain future work.
