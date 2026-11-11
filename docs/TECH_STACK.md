@@ -37,18 +37,19 @@ This list distinguishes installed project dependencies from selected future tech
 | Docker | Container runtime for local infrastructure | Configured |
 | Docker Compose | Local infrastructure orchestration | Configured |
 
-## Selected future document-processing and AI technologies
+## Document processing and future AI technologies
 
-The following are planned options for later processing and retrieval work. They are **not installed as backend dependencies or used by Module 1**:
+| Technology | Purpose | Status |
+|---|---|---|
+| PyMuPDF | PDF text, layout, table, and image-reference extraction | Installed and used by Module 2 |
+| python-docx | DOCX paragraphs, headings, tables, and image references | Installed and used by Module 2 |
+| OpenPyXL | XLSX worksheets, cells, tables, charts, and image references | Installed and used by Module 2 |
+| python-pptx | PPTX slides, text, tables, charts, and image references | Installed and used by Module 2 |
+| PaddleOCR / PaddlePaddle | OCR of scanned PDF pages | Optional runtime dependencies; loaded only when OCR is needed |
+| Gemini API | Optional descriptions of selected embedded visuals | Called directly over HTTP; `GEMINI_API_KEY` is environment configuration, no SDK dependency |
+| Docling | Optional richer PDF layout conversion | Not installed or currently used; PyMuPDF is the current PDF parser |
+| Sentence Transformers / BGE | Text embeddings | Future Module 3 work |
+| BM25 | Lexical retrieval | Future Module 3 work |
+| BGE reranker | Candidate reranking | Future Module 3 work |
 
-- PyMuPDF: PDF text extraction.
-- Docling: document parsing and layout-aware conversion.
-- PaddleOCR: optical character recognition.
-- OpenPyXL: Excel workbook parsing.
-- python-pptx: PowerPoint parsing.
-- Sentence Transformers / BGE: text embeddings.
-- BM25: lexical retrieval.
-- BGE reranker: candidate reranking.
-- Gemini API: generative AI integration.
-
-No whole-system LangChain dependency is selected. Future integrations should remain modular and use focused libraries where they fit.
+These processing libraries are not used by Module 1's upload and document-management paths. No whole-system LangChain dependency is selected; keep future integrations modular and use focused libraries where they fit.

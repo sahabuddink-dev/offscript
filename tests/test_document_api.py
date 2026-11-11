@@ -130,6 +130,19 @@ class DocumentApiTests(unittest.TestCase):
             {"Content-Type": f"multipart/form-data; boundary={boundary}"},
         )
 
+    def _wait_for_processing(self, document_id):
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            response_status, response = self._request(
+                "GET",
+                f"/api/documents/{document_id}/processing",
+            )
+            self.assertEqual(response_status, 200)
+            if response["status"] in {"completed", "failed"}:
+                return response
+            time.sleep(0.05)
+        self.fail(f"Document processing did not finish: {document_id}")
+
     def _upload_chunked(self, filename, content_size):
         boundary = f"offscript-test-{uuid.uuid4().hex}"
         connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=60)
@@ -237,6 +250,77 @@ class DocumentApiTests(unittest.TestCase):
         self.assertEqual(response_status, 201)
         self.assertEqual(response["file_size"], content_size)
         self.document_ids.append(response["id"])
+
+    def test_processing_api_runs_and_reprocesses_a_document(self):
+        upload_status, document = self._upload(
+            "processing.txt",
+            b"First paragraph.\nSecond paragraph.",
+        )
+        self.assertEqual(upload_status, 201)
+        self.document_ids.append(document["id"])
+        document_id = document["id"]
+
+        status_code, initial_status = self._request(
+            "GET",
+            f"/api/documents/{document_id}/processing",
+        )
+        self.assertEqual(status_code, 200)
+        self.assertEqual(initial_status["status"], "not_started")
+
+        start_status, start = self._request(
+            "POST",
+            f"/api/documents/{document_id}/process",
+        )
+        self.assertEqual(start_status, 202)
+        self.assertEqual(start["status"], "queued")
+        completed = self._wait_for_processing(document_id)
+        self.assertEqual(completed["status"], "completed")
+
+        content_status, content = self._request(
+            "GET",
+            f"/api/documents/{document_id}/content",
+        )
+        self.assertEqual(content_status, 200)
+        self.assertEqual(content["status"], "completed")
+        self.assertEqual(
+            [item["content"]["text"] for item in content["items"]],
+            ["First paragraph.", "Second paragraph."],
+        )
+        self.assertTrue(
+            all(
+                item["source"]["filename"] == "processing.txt"
+                for item in content["items"]
+            )
+        )
+
+        retry_status, _ = self._request(
+            "POST",
+            f"/api/documents/{document_id}/process",
+        )
+        self.assertEqual(retry_status, 202)
+        self.assertEqual(self._wait_for_processing(document_id)["status"], "completed")
+        _, reprocessed_content = self._request(
+            "GET",
+            f"/api/documents/{document_id}/content",
+        )
+        self.assertEqual(len(reprocessed_content["items"]), 2)
+
+    def test_processing_failure_is_reported_for_a_corrupted_pdf(self):
+        upload_status, document = self._upload(
+            "corrupted.pdf",
+            b"%PDF-1.7\nnot a valid PDF body",
+        )
+        self.assertEqual(upload_status, 201)
+        self.document_ids.append(document["id"])
+
+        start_status, _ = self._request(
+            "POST",
+            f"/api/documents/{document['id']}/process",
+        )
+        self.assertEqual(start_status, 202)
+        failed = self._wait_for_processing(document["id"])
+        self.assertEqual(failed["status"], "failed")
+        self.assertTrue(failed["error_message"])
 
     def test_delete_removes_metadata_and_file_and_missing_id_is_404(self):
         upload_status, document = self._upload("delete-me.txt", b"delete this")
